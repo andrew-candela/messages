@@ -1,0 +1,12 @@
+syntax = "proto3";
+package messages;
+
+// import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/andrew-candela/messages";
+
+message Message {
+    string SenderName = 1;
+    string Content = 2;
+}
+
