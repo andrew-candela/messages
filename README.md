@@ -12,6 +12,9 @@ I'll also get to learn about a bunch of CS fundamentals on the way:
 I'm starting with UDP, but it sounds like TCP would be a better choice.
 I'll probably try both.
 
+In order to receive remote connections, you will probably have to set up
+port forwarding on your local network.
+
 ## Cryptography
 
 I haven't quite settled on a design here, but I'm imagining a web service
@@ -19,3 +22,7 @@ where each user can put their public keys in a "group", and then
 when you send a message, your machine uses the public key of the recipient to
 encrypt the message.
 I haven't yet figured out how to make IP addresses available to senders.
+
+## Reference
+
+- [example TCP and UDP servers in Go](https://www.linode.com/docs/guides/developing-udp-and-tcp-clients-and-servers-in-go/)
