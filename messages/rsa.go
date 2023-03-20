@@ -20,5 +20,13 @@ func EncryptMessage(publicKey rsa.PublicKey, message []byte, label []byte) ([]by
 		return nil, err
 	}
 	return encrypted, nil
+}
 
+func DecryptMessage(privateKey rsa.PrivateKey, message []byte) []byte {
+	decrypted, err := rsa.DecryptOAEP(
+		sha256.New(),
+		nil,
+		&privateKey,
+		message,
+	)
 }
