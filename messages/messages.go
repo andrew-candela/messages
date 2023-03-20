@@ -24,7 +24,7 @@ func (packet *Packet) ToBytes() []byte {
 	return data
 }
 
-func FromBytes(data []byte) Packet {
+func PacketFromBytes(data []byte) Packet {
 	newMessage := &Message{}
 	err := proto.Unmarshal(data, newMessage)
 	if err != nil {
@@ -37,7 +37,7 @@ func FromBytes(data []byte) Packet {
 
 }
 
-// Get preferred outbound ip of this machine
+// Get outbound ip of this machine
 func GetOutboundIP() net.IP {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {

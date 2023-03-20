@@ -9,7 +9,7 @@ import (
 
 const PROTOCOL = "udp4"
 
-// Creates a UDP "seerver", listening on the given port
+// Creates a UDP "server", listening on the given port
 // Will loop forever and pass input to the given channel
 func Listen(port string, out_chan chan []byte) {
 	udpAddr, err := net.ResolveUDPAddr(PROTOCOL, ":"+port)
@@ -18,7 +18,7 @@ func Listen(port string, out_chan chan []byte) {
 		return
 	}
 
-	fmt.Println("Listening at: ", GetOutboundIP().String()+":"+udpAddr.String())
+	fmt.Println("Listening at: ", GetOutboundIP().String()+udpAddr.String())
 	connection, err := net.ListenUDP(PROTOCOL, udpAddr)
 	if err != nil {
 		fmt.Println(err)
@@ -63,12 +63,11 @@ func ProduceMessages(ip_port string, user string) {
 		}
 		bytes := newMessage.ToBytes()
 		conn.Write(bytes)
-		n, _, err := conn.ReadFromUDP(resp_buffer)
+		_, _, err := conn.ReadFromUDP(resp_buffer)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		fmt.Printf("Reply: %s\n", string(resp_buffer[:n]))
 		fmt.Print("--> ")
 	}
 
@@ -78,7 +77,7 @@ func ProduceMessages(ip_port string, user string) {
 // Pair this with Listen to print messages you got from friends.
 func PrintUDPOutput(in_channel chan []byte) {
 	for datagram := range in_channel {
-		message := FromBytes(datagram)
+		message := PacketFromBytes(datagram)
 		fmt.Printf("%s: %s\n", message.SenderName, message.Content)
 	}
 }

@@ -10,7 +10,7 @@ func TestEncode(t *testing.T) {
 		Content:    "Hello",
 	}
 	pack_bytes := pack.ToBytes()
-	new_packet := FromBytes(pack_bytes)
+	new_packet := PacketFromBytes(pack_bytes)
 	if new_packet != pack {
 		t.Errorf("Oops!")
 	}

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"flag"
+	"os"
+
 	"github.com/andrew-candela/messages/messages"
 )
 
@@ -10,8 +13,9 @@ const (
 	TYPE = "udp"
 )
 
-const USERNAME = "Andrew"
-
 func main() {
-	messages.ProduceMessages(HOST+":"+PORT, USERNAME)
+	var host string
+	flag.StringVar(&host, "host", "10.0.0.186:1053", "Provide the HOST:PORT to write to")
+	flag.Parse()
+	messages.ProduceMessages(host, os.Getenv("USER"))
 }
