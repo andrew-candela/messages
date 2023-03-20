@@ -23,6 +23,14 @@ when you send a message, your machine uses the public key of the recipient to
 encrypt the message.
 I haven't yet figured out how to make IP addresses available to senders.
 
+## Protobuf
+
+To compile the protobuf files run the following command:
+
+```shell
+protoc -I messages --go_out messages --go_opt=paths=source_relative messages/messages.proto
+```
+
 ## Reference
 
 - [example TCP and UDP servers in Go](https://www.linode.com/docs/guides/developing-udp-and-tcp-clients-and-servers-in-go/)
