@@ -12,8 +12,9 @@ I'll also get to learn about a bunch of CS fundamentals on the way:
 I'm starting with UDP, but it sounds like TCP would be a better choice.
 I'll probably try both.
 
-In order to receive remote connections, you will probably have to set up
+In order to receive remote connections, you probably have to set up
 port forwarding on your local network.
+This is really going to put a damper on using this with non-technical folks.
 
 ## Cryptography
 
@@ -31,6 +32,12 @@ To compile the protobuf files run the following command:
 protoc -I messages --go_out messages --go_opt=paths=source_relative messages/messages.proto
 ```
 
+This package uses PB to encode your message before it's sent over to the recipient.
+For now this is overkill.
+If I ever start including more metadata in the messages, then this will be useful.
+
 ## Reference
 
 - [example TCP and UDP servers in Go](https://www.linode.com/docs/guides/developing-udp-and-tcp-clients-and-servers-in-go/)
+- stack overflow referencing
+[loading keys](https://stackoverflow.com/questions/13555085/save-and-load-crypto-rsa-privatekey-to-and-from-the-disk)
