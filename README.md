@@ -23,6 +23,8 @@ where each user can put their public keys in a "group", and then
 when you send a message, your machine uses the public key of the recipient to
 encrypt the message.
 I haven't yet figured out how to make IP addresses available to senders.
+I'm leaning more towards having the web service provide this when the
+messaging app boots.
 
 ## Protobuf
 
@@ -35,6 +37,15 @@ protoc -I messages --go_out messages --go_opt=paths=source_relative messages/mes
 This package uses PB to encode your message before it's sent over to the recipient.
 For now this is overkill.
 If I ever start including more metadata in the messages, then this will be useful.
+
+## ToDo
+
+- Check max message length.
+How do I chunk messages up if they exceed the buffer size?
+- read public keys from a file/memory
+- Think about command line interface.
+I'll have a manual mode and and then a mode that grabs address/username/public key data from a service
+
 
 ## Reference
 

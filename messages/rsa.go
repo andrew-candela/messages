@@ -8,6 +8,8 @@ import (
 	"encoding/pem"
 	"fmt"
 	"os"
+
+	"golang.org/x/crypto/ssh"
 )
 
 const LABEL = "myCoolMessagingApp"
@@ -21,8 +23,8 @@ func RSAEncrypt(publicKey rsa.PublicKey, message []byte) ([]byte, error) {
 		[]byte(LABEL),
 	)
 	if err != nil {
-		fmt.Println(err)
-		return nil, err
+		new_err := fmt.Errorf("trouble encrypting string...%w", err)
+		return nil, new_err
 	}
 	return encrypted, nil
 }
@@ -41,26 +43,24 @@ func RSADecrypt(privateKey rsa.PrivateKey, message []byte) []byte {
 
 // // Reads an existing .pem or rsa keyfile and returns a
 // // reference to it.
-// func ReadExistingKey(keyFile string) *rsa.PrivateKey {
-// 	keyfile, err := os.ReadFile(keyFile)
-// 	CheckErrFatal(err)
-// 	block, _ := pem.Decode([]byte(keyfile))
-// 	switch block.Type {
-// 	case "OPENSSH PRIVATE KEY":
-// 		key, err := ssh.ParsePrivateKey(block.Bytes)
-// 		CheckErrFatal(err)
-// 		return &key.PublicKey()
-// 	default:
-// 		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-// 		CheckErrFatal(err)
-// 		return key
-// 	}
-// }
+func ReadExistingKey(keyFile string) (*rsa.PrivateKey, error) {
+	keyfile, err := os.ReadFile(keyFile)
+	CheckErrFatal(err)
+	// block, _ := pem.Decode([]byte(keyfile))
+	// key_interface, err := ssh.ParseRawPrivateKey(block.Bytes)
+	key, err := ssh.ParseRawPrivateKey(keyfile)
+	if err != nil {
+		err = fmt.Errorf("error parsing key file...%w", err)
+		return nil, err
+	}
+	rsaKey := key.(*rsa.PrivateKey)
+	return rsaKey, nil
+}
 
 func WriteKeyToDisk(key *rsa.PrivateKey, fileName string) {
 	pemData := pem.EncodeToMemory(
 		&pem.Block{
-			Type:  "RSA Private Key",
+			Type:  "RSA PRIVATE KEY",
 			Bytes: x509.MarshalPKCS1PrivateKey(key),
 		},
 	)
@@ -69,7 +69,7 @@ func WriteKeyToDisk(key *rsa.PrivateKey, fileName string) {
 }
 
 func GenerateRandomKey() *rsa.PrivateKey {
-	k, err := rsa.GenerateKey(rand.Reader, 1024)
+	k, err := rsa.GenerateKey(rand.Reader, 2048)
 	CheckErrFatal(err)
 	return k
 }

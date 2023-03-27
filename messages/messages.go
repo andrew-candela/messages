@@ -26,6 +26,7 @@ func (packet *Packet) ToBytes() []byte {
 
 func PacketFromBytes(data []byte) Packet {
 	newMessage := &Message{}
+	// fmt.Println("Message = ", string(data))
 	err := proto.Unmarshal(data, newMessage)
 	if err != nil {
 		panic(err)
