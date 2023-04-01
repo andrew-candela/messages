@@ -1,15 +1,16 @@
-package main
+package cmd
 
 import (
 	"flag"
 	"fmt"
 
 	"github.com/andrew-candela/messages/messages"
+	"github.com/spf13/cobra"
 )
 
 const PORT = "1053"
 
-func main() {
+func listen() {
 	var port string
 	var keyfile string
 	flag.StringVar(&port, "port", PORT, "Port number to listen on")
@@ -22,4 +23,15 @@ func main() {
 	c := make(chan []byte, 10)
 	go messages.Listen(PORT, c, *key)
 	messages.PrintUDPOutput(c)
+}
+
+func init() {
+	rootCmd.AddCommand(listenCommand)
+}
+
+var listenCommand = &cobra.Command{
+	Use: "listen",
+	Run: func(cmd *cobra.Command, args []string) {
+		listen()
+	},
 }

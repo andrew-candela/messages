@@ -1,0 +1,30 @@
+# Use a file like this to manually configure your producer and consumer settings.
+
+title = "Example message config"
+
+# The 'listen' table configures where your machine will be
+# listening for messages.
+private_key_file = "/Users/acandela/.ssh/id_rsa"
+
+[listen]
+external_host = "aim.andrewcandela.com:1053"
+internal_host = "10.0.0.176:1053"
+
+# Configure each group below. Groups must have unique identifiers
+
+# Choosing produce -g group_one will send messages to two recipients
+[group_one]
+name = "Group One"
+[[group_one.users]]
+host="10.0.0.176:1053"
+key="some_key"
+[[group_one.users]]
+host="aim.andrewcandela.com:1053"
+key="some_other_key"
+
+# Choosing produce -g group_two will send messages to one recipient
+[group_two]
+name = "Group Two"
+[[group_two.users]]
+host="10.0.0.176:1053"
+public_key="some_key"

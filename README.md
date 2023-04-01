@@ -15,6 +15,7 @@ I'll probably try both.
 In order to receive remote connections, you probably have to set up
 port forwarding on your local network.
 This is really going to put a damper on using this with non-technical folks.
+Jon gave me a really good idea of how to get around this.
 
 ## Cryptography
 
@@ -44,6 +45,7 @@ If I ever start including more metadata in the messages, then this will be usefu
 How do I chunk messages up if they exceed the buffer size?
 - read public keys from a file/memory
 - Think about command line interface.
+I'll use [cobra](https://github.com/spf13/cobra/) and [viper](https://github.com/spf13/viper).
 I'll have a manual mode and and then a mode that grabs address/username/public key data from a service
 
 
