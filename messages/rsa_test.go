@@ -15,6 +15,15 @@ func TestCryptoEncode(t *testing.T) {
 	}
 }
 
+func TestCryptoVerify(t *testing.T) {
+	message := "Hello world!"
+	k := GenerateRandomKey()
+	sig, _ := RSASign(k, message)
+	if !RSAVerify(&k.PublicKey, message, sig) {
+		t.Errorf("Verification Failed!")
+	}
+}
+
 func TestRSAWriteRead(t *testing.T) {
 	message := []byte("hello world")
 	test_key_file := "test_key.pem"

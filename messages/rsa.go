@@ -1,6 +1,7 @@
 package messages
 
 import (
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -39,6 +40,26 @@ func RSADecrypt(privateKey rsa.PrivateKey, message []byte) []byte {
 	)
 	CheckErrFatal(err)
 	return decrypted
+}
+
+func RSASign(key *rsa.PrivateKey, message string) (sig []byte, err error) {
+	hashed := sha256.Sum256([]byte(message))
+	sig, err = rsa.SignPKCS1v15(nil, key, crypto.SHA256, hashed[:])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error from signing: %s\n", err)
+		return
+	}
+	return
+}
+
+func RSAVerify(pub *rsa.PublicKey, message string, sig []byte) bool {
+	digest := sha256.Sum256([]byte(message))
+	err := rsa.VerifyPKCS1v15(pub, crypto.SHA256, digest[:], sig)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error verifying signature: %s\n", err)
+		return false
+	}
+	return true
 }
 
 // // Reads an existing .pem or rsa keyfile and returns a
