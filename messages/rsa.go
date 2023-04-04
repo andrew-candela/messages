@@ -57,6 +57,32 @@ func ReadExistingKey(keyFile string) (*rsa.PrivateKey, error) {
 	return rsaKey, nil
 }
 
+// https://stackoverflow.com/a/70719783/14223687 for a good example
+func ParsePublicKey(keyString string) rsa.PublicKey {
+
+	var spkiPem = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoZ67dtUTLxoXnNEzRBFB
+mwukEJGC+y69cGgpNbtElQj3m4Aft/7cu9qYbTNguTSnCDt7uovZNb21u1vpZwKH
+yVgFEGO4SA8RNnjhJt2D7z8RDMWX3saody7jo9TKlrPABLZGo2o8vadW8Dly/v+I
+d0YDheCkVCoCEeUjQ8koXZhTwhYkGPu+vkdiqX5cUaiVTu1uzt591aO5Vw/hV4DI
+hFKnOTnYXnpXiwRwtPyYoGTa64yWfi2t0bv99qz0BgDjQjD0civCe8LRXGGhyB1U
+1aHjDDGEnulTYJyEqCzNGwBpzEHUjqIOXElFjt55AFGpCHAuyuoXoP3gQvoSj6RC
+sQIDAQAB
+-----END PUBLIC KEY-----`
+	pKeyBlock, _ := pem.Decode([]byte(spkiPem))
+	if pKeyBlock == nil {
+		fmt.Println("Error in pem.Decode...")
+		panic("Oops")
+	}
+	pubKeyInterface, err_two := x509.ParsePKIXPublicKey(pKeyBlock.Bytes)
+	if err_two != nil {
+		fmt.Println("Error in x509.ParsePKIXPublicKey...", err_two)
+		panic(err_two)
+	}
+	pubKey := pubKeyInterface.(*rsa.PublicKey)
+	return *pubKey
+}
+
 func WriteKeyToDisk(key *rsa.PrivateKey, fileName string) {
 	pemData := pem.EncodeToMemory(
 		&pem.Block{

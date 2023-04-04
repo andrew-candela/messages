@@ -19,13 +19,34 @@ Jon gave me a really good idea of how to get around this.
 
 ## Cryptography
 
-I haven't quite settled on a design here, but I'm imagining a web service
-where each user can put their public keys in a "group", and then
-when you send a message, your machine uses the public key of the recipient to
-encrypt the message.
-I haven't yet figured out how to make IP addresses available to senders.
-I'm leaning more towards having the web service provide this when the
-messaging app boots.
+We use asymetric encryption.
+The producer has public keys for each target in the group,
+and the message is encrypted for each target using that target's key.
+
+Messages received are decrypted with the client's private key.
+
+### Key management
+
+I will not support all types of keys.
+You must either create a new private key using this library,
+or otherwise generate an RSA key that conforms with
+the [X.509 standard](https://en.wikipedia.org/wiki/X.509).
+This package uses [crypto/rsa.GenerateKey](https://pkg.go.dev/crypto/rsa#GenerateKey)
+to generate a private key and write it to a known location ( # todo: what's the location?).
+
+### ToDo: Signatures
+Messages are signed by the senders and verified by the listener upon receipt.
+The sender will not receive a success response if any of the following occurs:
+
+- the host associated with the message sender does not match the expected host
+- the message cannot be decrypted
+- the message is not signed as expected
+
+I can use [rsa.SignPKCS1v15](https://pkg.go.dev/crypto/rsa#SignPKCS1v15) and
+[rsa.VerifyPKCS1v15](https://pkg.go.dev/crypto/rsa#VerifyPKCS1v15)
+to sign and verify the messages.
+I can include the signature in the message metadata.
+
 
 ## Protobuf
 
@@ -47,6 +68,8 @@ How do I chunk messages up if they exceed the buffer size?
 - Think about command line interface.
 I'll use [cobra](https://github.com/spf13/cobra/) and [viper](https://github.com/spf13/viper).
 I'll have a manual mode and and then a mode that grabs address/username/public key data from a service
+- write up details about key formats in README
+- make directory where stuff is written and config lives configurable
 
 
 ## Reference

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"crypto/rsa"
 	"flag"
 	"fmt"
 	"os"
@@ -21,33 +20,25 @@ type deliver_config struct {
 	Key  string
 }
 
-func getKey(keyFile string) *rsa.PublicKey {
-	k, _ := messages.ReadExistingKey(keyFile)
-	return &k.PublicKey
-}
-
-func makeTargets(k *rsa.PublicKey) *[]messages.RecipientDetails {
-	return &[]messages.RecipientDetails{
-		{
-			DestinationHostPort: "10.0.0.176:1053",
-			PublicKey:           *k,
-		},
-		{
-			DestinationHostPort: "aim.andrewcandela.com:1053",
-			PublicKey:           *k,
-		},
+func makeTargets(conf config) *[]messages.RecipientDetails {
+	var recips []messages.RecipientDetails
+	for _, user_conf := range conf.Users {
+		recips = append(recips, messages.RecipientDetails{
+			DestinationHostPort: user_conf.Host,
+			PublicKey:           messages.ParsePublicKey(user_conf.Key),
+		})
 	}
+	return &recips
 }
 
-func produce(keyFile string, group_name string, recip_config []config) {
+func produce(keyFile string, group_name string, recip_config config) {
 	var host string
 	var user string
 	flag.StringVar(&host, "host", "10.0.0.186:1053", "Provide the HOST:PORT to write to")
 	flag.StringVar(&user, "user", os.Getenv("USER"), "What do you call yourself?")
 	flag.Parse()
-	k := getKey(keyFile)
 	fmt.Println(recip_config)
-	targets := makeTargets(k)
+	targets := makeTargets(recip_config)
 	messages.ProduceMessages(*targets, user)
 }
 
@@ -58,7 +49,7 @@ func init() {
 var produceCommand = &cobra.Command{
 	Use: "produce",
 	Run: func(cmd *cobra.Command, args []string) {
-		var recipConfig []config
+		var recipConfig config
 		group := args[0]
 		viper.ReadInConfig()
 		keyFile := viper.GetString("private_key_file")
