@@ -42,8 +42,8 @@ func RSADecrypt(privateKey rsa.PrivateKey, message []byte) []byte {
 	return decrypted
 }
 
-func RSASign(key *rsa.PrivateKey, message string) (sig []byte, err error) {
-	hashed := sha256.Sum256([]byte(message))
+func RSASign(key *rsa.PrivateKey, message []byte) (sig []byte, err error) {
+	hashed := sha256.Sum256(message)
 	sig, err = rsa.SignPKCS1v15(nil, key, crypto.SHA256, hashed[:])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error from signing: %s\n", err)
@@ -52,8 +52,8 @@ func RSASign(key *rsa.PrivateKey, message string) (sig []byte, err error) {
 	return
 }
 
-func RSAVerify(pub *rsa.PublicKey, message string, sig []byte) bool {
-	digest := sha256.Sum256([]byte(message))
+func RSAVerify(pub *rsa.PublicKey, message []byte, sig []byte) bool {
+	digest := sha256.Sum256(message)
 	err := rsa.VerifyPKCS1v15(pub, crypto.SHA256, digest[:], sig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error verifying signature: %s\n", err)
@@ -113,6 +113,32 @@ func WriteKeyToDisk(key *rsa.PrivateKey, fileName string) {
 	)
 	err := os.WriteFile(fileName, pemData, 0600)
 	CheckErrFatal(err)
+}
+
+func encodePublicKey(key *rsa.PrivateKey) []byte {
+	pubKey := key.PublicKey
+	pubKeyBytes, err := x509.MarshalPKIXPublicKey(&pubKey)
+	if err != nil {
+		panic(err)
+	}
+	pemData := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PUBLIC KEY",
+			Bytes: pubKeyBytes,
+		},
+	)
+	return pemData
+}
+
+func WritePublicKey(key *rsa.PrivateKey, fileName string) {
+	bytes := encodePublicKey(key)
+	err := os.WriteFile(fileName, bytes, 0600)
+	CheckErrFatal(err)
+}
+
+func DisplayPublicKey(key *rsa.PrivateKey) {
+	pem_key := encodePublicKey(key)
+	fmt.Println(string(pem_key))
 }
 
 func GenerateRandomKey() *rsa.PrivateKey {

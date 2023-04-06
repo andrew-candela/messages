@@ -14,14 +14,23 @@ const (
 	X_MARK   = "\u274C"
 )
 
-type RecipientDetails struct {
+type GroupDetails struct {
 	DestinationHostPort string
 	PublicKey           rsa.PublicKey
 }
 
+func findGroupMember(hostPort string, groupData []GroupDetails) (*GroupDetails, bool) {
+	for _, detail := range groupData {
+		if detail.DestinationHostPort == hostPort {
+			return &detail, true
+		}
+	}
+	return nil, false
+}
+
 // Creates a UDP "server", listening on the given port
 // Will loop forever and pass input to the given channel
-func Listen(port string, out_chan chan []byte, key rsa.PrivateKey) {
+func Listen(port string, out_chan chan Packet, key rsa.PrivateKey, groupDetails []GroupDetails) {
 	udpAddr, err := net.ResolveUDPAddr(PROTOCOL, ":"+port)
 	if err != nil {
 		fmt.Println(err)
@@ -39,7 +48,17 @@ func Listen(port string, out_chan chan []byte, key rsa.PrivateKey) {
 		buffer := make([]byte, 1024)
 		n, respAddr, _ := connection.ReadFromUDP(buffer)
 		message := RSADecrypt(key, buffer[:n])
-		out_chan <- message
+		parsed := PacketFromBytes(message)
+		userDetail, found := findGroupMember(respAddr.String(), groupDetails)
+		if !found {
+			fmt.Println("Could not find user located at host:", respAddr.String())
+			continue
+		}
+		if !RSAVerify(&userDetail.PublicKey, []byte(parsed.Content), parsed.Signature) {
+			fmt.Println("Message received was not signed by user expected at:", userDetail.DestinationHostPort)
+			continue
+		}
+		out_chan <- parsed
 		_, err := connection.WriteToUDP([]byte("\u2705"), respAddr)
 		if err != nil {
 			fmt.Println(err)
@@ -50,15 +69,14 @@ func Listen(port string, out_chan chan []byte, key rsa.PrivateKey) {
 
 // Prints the data received from the input channel.
 // Pair this with Listen to print messages you got from friends.
-func PrintUDPOutput(in_channel <-chan []byte) {
-	for datagram := range in_channel {
-		message := PacketFromBytes(datagram)
+func PrintUDPOutput(in_channel <-chan Packet) {
+	for message := range in_channel {
 		fmt.Printf("%s: %s\n", message.SenderName, message.Content)
 	}
 }
 
 // Write UDP messages to a given IP:PORT address
-func ProduceMessages(deliver_details []RecipientDetails, user string) {
+func ProduceMessages(deliver_details []GroupDetails, user string, key *rsa.PrivateKey) {
 	var channels []chan []byte
 	wg := sync.WaitGroup{}
 	for i, detail := range deliver_details {
@@ -73,9 +91,15 @@ func ProduceMessages(deliver_details []RecipientDetails, user string) {
 	fmt.Print("--> ")
 	for scanner.Scan() {
 		message_bytes := scanner.Bytes()
+		sig, err := RSASign(key, message_bytes)
+		if err != nil {
+			fmt.Println("Error signing message. Will not send!")
+			continue
+		}
 		packet := Packet{
 			SenderName: user,
 			Content:    string(message_bytes),
+			Signature:  sig,
 		}
 		proto_message := packet.ToBytes()
 		for i := range deliver_details {
@@ -101,7 +125,7 @@ func createUDPConnection(ip_port string) (conn *net.UDPConn, err error) {
 }
 
 // Write UDP messages to a given IP:PORT address
-func MessageProducer(recipient RecipientDetails, user string, message_chan <-chan []byte, wg *sync.WaitGroup) {
+func MessageProducer(recipient GroupDetails, user string, message_chan <-chan []byte, wg *sync.WaitGroup) {
 	made_connection := true
 	conn, err := createUDPConnection(recipient.DestinationHostPort)
 	if err != nil {

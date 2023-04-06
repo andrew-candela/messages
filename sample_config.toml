@@ -2,9 +2,11 @@
 
 title = "Example message config"
 
+# private_key_file = "/Users/acandela/.ssh/id_rsa"
+private_key_file = "messages_id_rsa"
+
 # The 'listen' table configures where your machine will be
 # listening for messages.
-private_key_file = "/Users/acandela/.ssh/id_rsa"
 
 [listen]
 external_host = "aim.andrewcandela.com:1053"
@@ -28,7 +30,13 @@ name = "Group Two"
 [[group_two.users]]
 host="10.0.0.186:1053"
 public_key='''
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoZ67dtUTLxoXnNEzRBFBmwukEJGC+y69cGgpNbtElQj3m4Aft/7cu9qYbTNguTSnCDt7uovZNb21u1vpZwKHyVgFEGO4SA8RNnjhJt2D7z8RDMWX3saody7jo9TKlrPABLZGo2o8vadW8Dly/v+Id0YDheCkVCoCEeUjQ8koXZhTwhYkGPu+vkdiqX5cUaiVTu1uzt591aO5Vw/hV4DIhFKnOTnYXnpXiwRwtPyYoGTa64yWfi2t0bv99qz0BgDjQjD0civCe8LRXGGhyB1U1aHjDDGEnulTYJyEqCzNGwBpzEHUjqIOXElFjt55AFGpCHAuyuoXoP3gQvoSj6RCsQIDAQAB
------END PUBLIC KEY-----
+-----BEGIN RSA PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw1G2QNnwOYZRGhaCV1Yi
+okLAckWbiYXkfTlCub+4n1FapheAX+h45WjIN1UHWdQ8IFkS7knOHkvmXVPW0+Yx
+sdewpydRA4hsa8RK5X3HoY8a55AmOhbcDLzomGTTKP+PJLAkFSp4n7ImjXCS1HO0
+b6WZfXTk+F+jUVC0oY/174iNG+WbGXxyCJC59448B+3HxcCfJaCt9tXbQO/V+Lrn
+A0lgKW1KQ0yultwzpGPMFiZQDS3vuV4UOqCJn9T2X6UpiNqCeZ69//hgW4KTx8tn
+r/v7pm1+pYuuf51Vvk+2T9uDG1MChOmvpx5shKG45Yxx/PB8NrB6O/+ezFKU9O4L
+MQIDAQAB
+-----END RSA PUBLIC KEY-----
 '''

@@ -1,11 +1,11 @@
 
-# A not so good chat app
+# Messages sent via UDP
 
-I never had AIM when I was a kid.
-I think that's what I have in mind with this project.
-Ultimately I want to be able to chat with my friends in our terminals
-without sending data to Apple or Google.
-I'll also get to learn about a bunch of CS fundamentals on the way:
+This project is mostly meant to teach me about using Go.
+The idea is that you can send and receive UDP messages to/from
+your friends on the internet.
+
+This project is quickly growing out of control...
 
 ## Networking
 
@@ -42,9 +42,6 @@ The sender will not receive a success response if any of the following occurs:
 - the message cannot be decrypted
 - the message is not signed as expected
 
-I can use [rsa.SignPKCS1v15](https://pkg.go.dev/crypto/rsa#SignPKCS1v15) and
-[rsa.VerifyPKCS1v15](https://pkg.go.dev/crypto/rsa#VerifyPKCS1v15)
-to sign and verify the messages.
 I can include the signature in the message metadata.
 
 
@@ -77,3 +74,5 @@ I'll have a manual mode and and then a mode that grabs address/username/public k
 - [example TCP and UDP servers in Go](https://www.linode.com/docs/guides/developing-udp-and-tcp-clients-and-servers-in-go/)
 - stack overflow referencing
 [loading keys](https://stackoverflow.com/questions/13555085/save-and-load-crypto-rsa-privatekey-to-and-from-the-disk)
+- Looks like I'll have to chunk up the payloads in order to encrypt them..
+[this so answer](https://stackoverflow.com/a/67035019/14223687) seems promising.

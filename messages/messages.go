@@ -10,12 +10,14 @@ import (
 type Packet struct {
 	SenderName string
 	Content    string
+	Signature  []byte
 }
 
 func (packet *Packet) ToBytes() []byte {
 	m := &Message{
 		SenderName: packet.SenderName,
 		Content:    packet.Content,
+		Signature:  packet.Signature,
 	}
 	data, err := proto.Marshal(m)
 	if err != nil {
@@ -34,6 +36,7 @@ func PacketFromBytes(data []byte) Packet {
 	return Packet{
 		SenderName: newMessage.SenderName,
 		Content:    newMessage.Content,
+		Signature:  newMessage.Signature,
 	}
 
 }

@@ -1,37 +1,49 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
+	"os"
 
 	"github.com/andrew-candela/messages/messages"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const PORT = "1053"
 
-func listen() {
-	var port string
-	var keyfile string
-	flag.StringVar(&port, "port", PORT, "Port number to listen on")
-	flag.StringVar(&keyfile, "keyfile", "/Users/acandela/.ssh/id_rsa", "Private keyfile to use to decrypt messages.")
-	key, err := messages.ReadExistingKey(keyfile)
+var port string
+
+func listen(keyFile string, groupName string, recipConfig messages.Config, port string) {
+
+	key, err := messages.ReadExistingKey(keyFile)
 	if err != nil {
 		fmt.Println("Could not read keyfile:", err)
 		return
 	}
-	c := make(chan []byte, 10)
-	go messages.Listen(PORT, c, *key)
+	targets := messages.MakeTargets(recipConfig)
+	c := make(chan messages.Packet, 10)
+	go messages.Listen(PORT, c, *key, *targets)
 	messages.PrintUDPOutput(c)
 }
 
 func init() {
+	listenCommand.Flags().StringVarP(&port, "port", "p", PORT, "Port number to listen on")
 	rootCmd.AddCommand(listenCommand)
 }
 
 var listenCommand = &cobra.Command{
 	Use: "listen",
 	Run: func(cmd *cobra.Command, args []string) {
-		listen()
+		var recipConfig messages.Config
+
+		group := args[0]
+		viper.GetViper().ReadInConfig()
+		keyFile := viper.GetString("private_key_file")
+		err := viper.UnmarshalKey(group, &recipConfig)
+		if err != nil {
+			fmt.Print("error:", err)
+			os.Exit(1)
+		}
+		listen(keyFile, group, recipConfig, port)
 	},
 }

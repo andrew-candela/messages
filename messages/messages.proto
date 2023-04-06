@@ -8,5 +8,6 @@ option go_package = "github.com/andrew-candela/messages";
 message Message {
     string SenderName = 1;
     string Content = 2;
+    bytes  Signature = 3;
 }
 
