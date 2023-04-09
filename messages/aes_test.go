@@ -2,6 +2,7 @@ package messages
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -24,10 +25,9 @@ func TestAESEncrypt(t *testing.T) {
 }
 
 func TestAESEncryptLong(t *testing.T) {
-	plainText := "Hello Andrew! How are you? I hope you're well!    Hello Andrew! How are you? I hope you're well!    Hello Andrew! How are you? I hope you're well!    Hello Andrew! How are you? I hope you're well!    Hello Andrew! How are you? I hope you're well!    Hello Andrew! How are you? I hope you're well!    Hello Andrew! How are you? I hope you're well!    Hello Andrew! How are you? I hope you're well!    Hello Andrew! How are you? I hope you're well!    Hello Andrew! How are you? I hope you're well!    Hello Andrew! How are you? I hope you're well!    Hello Andrew! How are you? I hope you're well!    "
+	plainText := strings.Repeat("Hello Andrew! ", 50)
 	key, _ := GenerateRandomAESKey()
 	cipherText, _ := AESEncrypt(plainText, key)
-	fmt.Println(cipherText)
 	recoveredText, _ := AESDecrypt(cipherText, key)
 	if plainText != recoveredText {
 		t.Error("unexpected results!")
