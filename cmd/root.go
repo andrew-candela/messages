@@ -5,7 +5,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-var configFile string
+var (
+	configFile string
+	group      string
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "messenger",
@@ -19,6 +22,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is 'sample_config.toml')")
+	rootCmd.PersistentFlags().StringVarP(&group, "group", "g", "", "Group Name to listen or write to")
 }
 
 func initConfig() {

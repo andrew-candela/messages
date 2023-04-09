@@ -27,6 +27,7 @@ func produce(keyFile string, group_name string, recip_config messages.Config) {
 }
 
 func init() {
+	produceCommand.Flags().StringVarP(&group, "group", "g", "", "Group Name to write to")
 	rootCmd.AddCommand(produceCommand)
 }
 
@@ -34,7 +35,6 @@ var produceCommand = &cobra.Command{
 	Use: "produce",
 	Run: func(cmd *cobra.Command, args []string) {
 		var recipConfig messages.Config
-		group := args[0]
 		viper.ReadInConfig()
 		keyFile := viper.GetString("private_key_file")
 		err := viper.UnmarshalKey(group, &recipConfig)

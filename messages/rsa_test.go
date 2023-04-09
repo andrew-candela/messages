@@ -5,18 +5,18 @@ import (
 	"testing"
 )
 
-func TestCryptoEncode(t *testing.T) {
+func TestRSAEncode(t *testing.T) {
 	message := "hello world"
 	k := GenerateRandomKey()
-	cipher, _ := RSAEncrypt(k.PublicKey, []byte(message))
-	decoded := RSADecrypt(*k, cipher)
+	cipher, _ := RSAEncrypt(&k.PublicKey, []byte(message))
+	decoded, _ := RSADecrypt(k, cipher)
 	if string(decoded) != message {
 		t.Errorf("%s != %s", message, string(decoded))
 	}
 }
 
-func TestCryptoVerify(t *testing.T) {
-	message := "Hello world!"
+func TestRSAVerify(t *testing.T) {
+	message := []byte("Hello world!")
 	k := GenerateRandomKey()
 	sig, _ := RSASign(k, message)
 	if !RSAVerify(&k.PublicKey, message, sig) {
@@ -31,8 +31,8 @@ func TestRSAWriteRead(t *testing.T) {
 	WriteKeyToDisk(k, test_key_file)
 	defer os.Remove(test_key_file)
 	new_key, _ := ReadExistingKey(test_key_file)
-	cipher, _ := RSAEncrypt(new_key.PublicKey, message)
-	decoded := RSADecrypt(*new_key, cipher)
+	cipher, _ := RSAEncrypt(&new_key.PublicKey, message)
+	decoded, _ := RSADecrypt(new_key, cipher)
 	if string(decoded) != string(message) {
 		t.Errorf("%s != %s", message, decoded)
 	}

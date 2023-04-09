@@ -15,11 +15,11 @@ import (
 
 const LABEL = "myCoolMessagingApp"
 
-func RSAEncrypt(publicKey rsa.PublicKey, message []byte) ([]byte, error) {
+func RSAEncrypt(publicKey *rsa.PublicKey, message []byte) ([]byte, error) {
 	encrypted, err := rsa.EncryptOAEP(
 		sha256.New(),
 		rand.Reader,
-		&publicKey,
+		publicKey,
 		[]byte(message),
 		[]byte(LABEL),
 	)
@@ -30,16 +30,19 @@ func RSAEncrypt(publicKey rsa.PublicKey, message []byte) ([]byte, error) {
 	return encrypted, nil
 }
 
-func RSADecrypt(privateKey rsa.PrivateKey, message []byte) []byte {
+func RSADecrypt(privateKey *rsa.PrivateKey, message []byte) ([]byte, error) {
 	decrypted, err := rsa.DecryptOAEP(
 		sha256.New(),
 		nil,
-		&privateKey,
+		privateKey,
 		message,
 		[]byte(LABEL),
 	)
-	CheckErrFatal(err)
-	return decrypted
+	if err != nil {
+		new_err := fmt.Errorf("unable to decrypt message... %w", err)
+		return nil, new_err
+	}
+	return decrypted, nil
 }
 
 func RSASign(key *rsa.PrivateKey, message []byte) (sig []byte, err error) {
@@ -62,13 +65,11 @@ func RSAVerify(pub *rsa.PublicKey, message []byte, sig []byte) bool {
 	return true
 }
 
-// // Reads an existing .pem or rsa keyfile and returns a
-// // reference to it.
+// Reads an existing .pem or rsa keyfile and returns a
+// reference to it.
 func ReadExistingKey(keyFile string) (*rsa.PrivateKey, error) {
 	keyfile, err := os.ReadFile(keyFile)
 	CheckErrFatal(err)
-	// block, _ := pem.Decode([]byte(keyfile))
-	// key_interface, err := ssh.ParseRawPrivateKey(block.Bytes)
 	key, err := ssh.ParseRawPrivateKey(keyfile)
 	if err != nil {
 		err = fmt.Errorf("error parsing key file...%w", err)
@@ -78,21 +79,10 @@ func ReadExistingKey(keyFile string) (*rsa.PrivateKey, error) {
 	return rsaKey, nil
 }
 
-// https://stackoverflow.com/a/70719783/14223687 for a good example
-func ParsePublicKey(keyString string) rsa.PublicKey {
-
-	var spkiPem = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoZ67dtUTLxoXnNEzRBFB
-mwukEJGC+y69cGgpNbtElQj3m4Aft/7cu9qYbTNguTSnCDt7uovZNb21u1vpZwKH
-yVgFEGO4SA8RNnjhJt2D7z8RDMWX3saody7jo9TKlrPABLZGo2o8vadW8Dly/v+I
-d0YDheCkVCoCEeUjQ8koXZhTwhYkGPu+vkdiqX5cUaiVTu1uzt591aO5Vw/hV4DI
-hFKnOTnYXnpXiwRwtPyYoGTa64yWfi2t0bv99qz0BgDjQjD0civCe8LRXGGhyB1U
-1aHjDDGEnulTYJyEqCzNGwBpzEHUjqIOXElFjt55AFGpCHAuyuoXoP3gQvoSj6RC
-sQIDAQAB
------END PUBLIC KEY-----`
-	pKeyBlock, _ := pem.Decode([]byte(spkiPem))
+func ParsePublicKey(keyString string) *rsa.PublicKey {
+	pKeyBlock, _ := pem.Decode([]byte(keyString))
 	if pKeyBlock == nil {
-		fmt.Println("Error in pem.Decode...")
+		fmt.Println("Error in pem.Decode, keyblock is nil...")
 		panic("Oops")
 	}
 	pubKeyInterface, err_two := x509.ParsePKIXPublicKey(pKeyBlock.Bytes)
@@ -101,7 +91,7 @@ sQIDAQAB
 		panic(err_two)
 	}
 	pubKey := pubKeyInterface.(*rsa.PublicKey)
-	return *pubKey
+	return pubKey
 }
 
 func WriteKeyToDisk(key *rsa.PrivateKey, fileName string) {

@@ -35,8 +35,6 @@ var listenCommand = &cobra.Command{
 	Use: "listen",
 	Run: func(cmd *cobra.Command, args []string) {
 		var recipConfig messages.Config
-
-		group := args[0]
 		viper.GetViper().ReadInConfig()
 		keyFile := viper.GetString("private_key_file")
 		err := viper.UnmarshalKey(group, &recipConfig)
