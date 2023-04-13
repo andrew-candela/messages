@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -196,6 +197,7 @@ func MessageProducer(recipient GroupDetails, user string, packet_chan <-chan Pac
 				wg.Done()
 				continue
 			}
+			conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 			n, _, err := conn.ReadFromUDP(resp_buffer)
 			if err == nil {
 				fmt.Println(recipient.DestinationHostPort, string(resp_buffer[:n]))
