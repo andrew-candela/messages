@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/andrew-candela/messages/messages"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,6 +22,7 @@ var keyCommand = &cobra.Command{
 			newKey := messages.GenerateRandomKey()
 			messages.WriteKeyToDisk(newKey, keyFile)
 		}
+		fmt.Println("Looking for key in:", keyFile)
 		key, _ := messages.ReadExistingKey(keyFile)
 		if print {
 			messages.DisplayPublicKey(key)

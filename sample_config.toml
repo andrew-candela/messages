@@ -9,7 +9,7 @@ private_key_file = "messages_id_rsa"
 # listening for messages.
 
 [listen]
-external_host = "aim.andrewcandela.com:1053"
+external_host = "something.example.com:1053"
 internal_host = "10.0.0.176:1053"
 
 # Configure each group below. Groups must have unique identifiers

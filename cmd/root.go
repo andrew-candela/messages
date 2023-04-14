@@ -6,8 +6,7 @@ import (
 )
 
 var (
-	configFile string
-	group      string
+	group string
 )
 
 var rootCmd = &cobra.Command{
@@ -21,14 +20,13 @@ func Execute() {
 }
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is 'sample_config.toml')")
 	rootCmd.PersistentFlags().StringVarP(&group, "group", "g", "", "Group Name to listen or write to")
 }
 
 func initConfig() {
-	if configFile != "" {
-		viper.SetConfigFile(configFile)
-	} else {
-		viper.SetConfigFile("sample_config.toml")
-	}
+	viper.SetConfigName("config")      // name of config file (without extension)
+	viper.SetConfigType("toml")        // REQUIRED if the config file does not have the extension in the name
+	viper.AddConfigPath("/etc/udpm")   // path to look for the config file in
+	viper.AddConfigPath("$HOME/.udpm") // call multiple times to add many search paths
+	viper.AddConfigPath(".")           // optionally look for config in the working directory
 }
