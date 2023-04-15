@@ -47,9 +47,16 @@ func findGroupMember(hostPort string, groupData []GroupDetails) (*GroupDetails, 
 	return nil, false
 }
 
-// Creates a UDP "server", listening on the given port
-// Will loop forever and pass input to the given channel
+// Creates a UDP "server", listening on the given port.
+//
+// Will loop forever and pass input to the given channel.
+//
+// A single message may be composed of many datagrams.
+// In order to support this, I'll maintain a map of hosts with
+// the datagrams as the value. If the current datagram is the last one,
+// then flush the map and concat all of the datagram content for that host.
 func Listen(port string, out_chan chan Packet, key rsa.PrivateKey, groupDetails []GroupDetails) {
+	gramMap := make(map[string][]byte)
 	udpAddr, err := net.ResolveUDPAddr(PROTOCOL, ":"+port)
 	if err != nil {
 		fmt.Println(err)
@@ -66,20 +73,29 @@ func Listen(port string, out_chan chan Packet, key rsa.PrivateKey, groupDetails 
 	for {
 		buffer := make([]byte, 1024)
 		n, respAddr, _ := connection.ReadFromUDP(buffer)
-		userDetail, found := findGroupMember(respAddr.String(), groupDetails)
+		responseAddressString := respAddr.IP.String()
+		userDetail, found := findGroupMember(responseAddressString, groupDetails)
 		if !found {
-			fmt.Println("Could not find user located at host:", respAddr.String())
+			fmt.Println("Could not find user located at host:", responseAddressString)
 			continue
 		}
 		dataGram, err := DataGramFromBytes(buffer[:n])
 		if err != nil {
-			fmt.Println("Could not unpack datagram received from:", respAddr.String())
+			fmt.Println("Could not unpack datagram received from:", responseAddressString)
 			continue
 		}
-		packet := PacketFromBytes(dataGram.Content)
+		gramMap[responseAddressString] = append(gramMap[responseAddressString], dataGram.Content...)
+		if dataGram.ExpectMoreMessages {
+			continue
+		}
+		packet, err := PacketFromBytes(gramMap[responseAddressString])
+		if err != nil {
+			fmt.Println("Could not unmarshal packet received from:", responseAddressString)
+			continue
+		}
 		err = packet.DecryptContent(&key)
 		if err != nil {
-			fmt.Println("Could not decrypt message from:", respAddr.String(), err)
+			fmt.Println("Could not decrypt message from:", responseAddressString, err)
 			continue
 		}
 		if !RSAVerify(userDetail.PublicKey, []byte(packet.Content), packet.Signature) {

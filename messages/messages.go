@@ -3,12 +3,16 @@ package messages
 import (
 	"crypto/rsa"
 	"fmt"
+	"os"
 
 	"google.golang.org/protobuf/proto"
 )
 
 const (
-	DATAGRAM_SIZE = 1023
+	// udpBuffer is 1024 bytes.
+	// Marshalling as Protobuf adds 5 bytes.
+	// We'll use 1000 bytes here to give some leeway
+	DATAGRAM_SIZE = 1019
 )
 
 type DataGram struct {
@@ -74,19 +78,19 @@ func (packet *Packet) DecryptContent(key *rsa.PrivateKey) error {
 	return nil
 }
 
-func PacketFromBytes(data []byte) Packet {
+func PacketFromBytes(data []byte) (Packet, error) {
 	newMessage := &Message{}
 	// fmt.Println("Message = ", string(data))
 	err := proto.Unmarshal(data, newMessage)
 	if err != nil {
-		panic(err)
+		return Packet{}, err
 	}
 	return Packet{
 		SenderName: newMessage.SenderName,
 		Content:    newMessage.Content,
 		Signature:  newMessage.Signature,
 		AESKey:     newMessage.AESKey,
-	}
+	}, nil
 }
 
 // If a message is too long (encoded length is over 1024 bytes)
@@ -110,6 +114,10 @@ func SplitMessageIntoDatagrams(encodedPacket []byte) [][]byte {
 			Content:            newDatagramContent,
 		}
 		encodedGram, _ := dataGram.ToBytes()
+		if len(encodedGram) > 1024 {
+			fmt.Println("Encoded Datagram is too long! Exiting the app")
+			os.Exit(1)
+		}
 
 		gramList = append(gramList, encodedGram)
 	}
