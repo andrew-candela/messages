@@ -151,18 +151,21 @@ func createUDPConnection(ip_port string) (conn *net.UDPConn, err error) {
 	return conn, nil
 }
 
-// Write UDP messages to a given IP:PORT address
-// a Packet must be:
+// Write UDP messages to a given IP:PORT address.
 //
-//	processed
-//	   - a random AES key is generated and encrypted, and added to the Packet
-//	   - the Packet.Content is encrypted with the AES key
-//	serialized
-//	  - call Packet.ToBytes()
-//	chunked
-//	  - the serialized bytes are chunked into batches of no more than 1023 bytes
-//	  - each chunk is used to create a DataGram object
-//	  - each Datagram is serialized and sent
+// A Packet must be:
+//
+// processed
+//   - a random AES key is generated and encrypted, and added to the Packet
+//   - the Packet.Content is encrypted with the AES key
+//
+// serialized
+//   - call Packet.ToBytes()
+//
+// chunked
+//   - the serialized bytes are chunked into batches of no more than 1023 bytes
+//   - each chunk is used to create a DataGram object
+//   - each Datagram is serialized and sent
 func MessageProducer(recipient GroupDetails, user string, packet_chan <-chan Packet, wg *sync.WaitGroup) {
 	made_connection := true
 	conn, err := createUDPConnection(recipient.DestinationHostPort)
@@ -194,8 +197,7 @@ func MessageProducer(recipient GroupDetails, user string, packet_chan <-chan Pac
 			_, err = conn.Write(gram)
 			if err != nil {
 				fmt.Println("Failed to send message to", recipient.DestinationHostPort, err)
-				wg.Done()
-				continue
+				break
 			}
 			conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 			n, _, err := conn.ReadFromUDP(resp_buffer)
@@ -204,8 +206,8 @@ func MessageProducer(recipient GroupDetails, user string, packet_chan <-chan Pac
 			} else {
 				fmt.Println(recipient.DestinationHostPort, X_MARK)
 			}
-			wg.Done()
 		}
+		wg.Done()
 	}
 }
 

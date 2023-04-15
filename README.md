@@ -58,7 +58,7 @@ This package uses PB to encode your message before it's sent over to the recipie
 ## ToDo
 
 - Check max message length.
-Looks like the parser of multiple datagrams is broken. I'm getting negative waitgroup counters.
+Looks like the parser of multiple datagrams is broken.
 I still need to add support in the consumer for messages composed of multiple datagrams.
 - Think about command line interface.
 I'll use [cobra](https://github.com/spf13/cobra/) and [viper](https://github.com/spf13/viper).
