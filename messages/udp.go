@@ -47,6 +47,13 @@ func findGroupMember(hostPort string, groupData []GroupDetails) (*GroupDetails, 
 	return nil, false
 }
 
+func sendAckByte(con *net.UDPConn, respAddr *net.UDPAddr) {
+	_, err := con.WriteToUDP([]byte(CHECK_MARK), respAddr)
+	if err != nil {
+		fmt.Printf("Unable to send ack byte to %s, %s", respAddr.IP.String(), err)
+	}
+}
+
 // Creates a UDP "server", listening on the given port.
 //
 // Will loop forever and pass input to the given channel.
@@ -86,6 +93,8 @@ func Listen(port string, out_chan chan Packet, key rsa.PrivateKey, groupDetails 
 		}
 		gramMap[responseAddressString] = append(gramMap[responseAddressString], dataGram.Content...)
 		if dataGram.ExpectMoreMessages {
+			fmt.Printf("Expecting more messages from %s so we will wait to print them...\n", responseAddressString)
+			sendAckByte(connection, respAddr)
 			continue
 		}
 		packet, err := PacketFromBytes(gramMap[responseAddressString])
@@ -103,11 +112,7 @@ func Listen(port string, out_chan chan Packet, key rsa.PrivateKey, groupDetails 
 			continue
 		}
 		out_chan <- packet
-		_, err = connection.WriteToUDP([]byte(CHECK_MARK), respAddr)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		sendAckByte(connection, respAddr)
 	}
 }
 

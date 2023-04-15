@@ -97,7 +97,6 @@ func PacketFromBytes(data []byte) (Packet, error) {
 // then it will be split into one or more datagrams
 func SplitMessageIntoDatagrams(encodedPacket []byte) [][]byte {
 	packetLength := len(encodedPacket)
-	numGrams := (packetLength / DATAGRAM_SIZE) + 1
 	expectMoreMessages := true
 	var gramList [][]byte
 	for i := 0; i < packetLength; i += DATAGRAM_SIZE {
@@ -105,7 +104,7 @@ func SplitMessageIntoDatagrams(encodedPacket []byte) [][]byte {
 		if end > packetLength {
 			end = packetLength
 		}
-		if i == numGrams-1 {
+		if end == packetLength {
 			expectMoreMessages = false
 		}
 		newDatagramContent := encodedPacket[i:end]
