@@ -5,10 +5,15 @@ This project is mostly meant to teach me about using Go.
 The idea is that you can send and receive UDP messages to/from
 your friends on the internet.
 
+The core of this app is peer to peer messaging, but there will
+be an optional service that power users can host that will aid
+user discovery and resolve some networking issues for folks who
+cannot set up port forwarding on their local networks.
+
 ## Networking
 
 I'm starting with UDP, but it sounds like TCP would be a better choice.
-I'd have to come up with a different name if I use TCP...
+I'd have to come up with a different name if I use TCP.
 
 In order to receive remote connections, you probably have to set up
 port forwarding on your local network.
@@ -28,8 +33,7 @@ and shared with the encrypted message in the Packet fields.
 
 I will not support all types of keys.
 You must either create a new private key using this library,
-or otherwise generate an RSA key that conforms with
-the [X.509 standard](https://en.wikipedia.org/wiki/X.509).
+or otherwise generate an RSA key on your own.
 This package uses [crypto/rsa.GenerateKey](https://pkg.go.dev/crypto/rsa#GenerateKey)
 to generate a private key and write it to your UDPM_HOME dir,
 (~/.udpm/udpm_id_rsa) by default.
@@ -43,8 +47,6 @@ The sender will not receive a success response if any of the following occurs:
 - the message cannot be decrypted
 - the message is not signed as expected
 
-The signature is included as a field in the Packet object.
-
 ## Protobuf
 
 To compile the protobuf files run the following command:
@@ -57,12 +59,13 @@ This package uses PB to encode your message before it's sent over to the recipie
 
 ## ToDo
 
-- Check max message length.
-Looks like the parser of multiple datagrams is broken.
-I still need to add support in the consumer for messages composed of multiple datagrams.
-- Think about command line interface.
-I'll use [cobra](https://github.com/spf13/cobra/) and [viper](https://github.com/spf13/viper).
+- Clean up command line interface. The default config file needs to be updated.
+I'll use 
 I'll have a manual mode and and then a mode that grabs address/username/public key data from a service
 - make directory where stuff is written and config lives configurable
 
 ## Reference
+
+- [cobra](https://github.com/spf13/cobra/) for CLI arguments
+- [viper](https://github.com/spf13/viper) for config.
+- [X.509 standard](https://en.wikipedia.org/wiki/X.509) defines the format of public key certificates

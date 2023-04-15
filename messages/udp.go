@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	PROTOCOL   = "udp4"
-	X_MARK     = "\u274C"
-	CHECK_MARK = "\u2705"
+	PROTOCOL          = "udp4"
+	X_MARK            = "\u274C"
+	CHECK_MARK        = "\u2705"
+	MEDIUM_CHECK_MARK = "\u2713"
 )
 
 // Get outbound ip of this machine
@@ -47,8 +48,8 @@ func findGroupMember(hostPort string, groupData []GroupDetails) (*GroupDetails, 
 	return nil, false
 }
 
-func sendAckByte(con *net.UDPConn, respAddr *net.UDPAddr) {
-	_, err := con.WriteToUDP([]byte(CHECK_MARK), respAddr)
+func sendAckByte(con *net.UDPConn, respAddr *net.UDPAddr, mark string) {
+	_, err := con.WriteToUDP([]byte(mark), respAddr)
 	if err != nil {
 		fmt.Printf("Unable to send ack byte to %s, %s", respAddr.IP.String(), err)
 	}
@@ -94,7 +95,7 @@ func Listen(port string, out_chan chan Packet, key rsa.PrivateKey, groupDetails 
 		gramMap[responseAddressString] = append(gramMap[responseAddressString], dataGram.Content...)
 		if dataGram.ExpectMoreMessages {
 			fmt.Printf("Expecting more messages from %s so we will wait to print them...\n", responseAddressString)
-			sendAckByte(connection, respAddr)
+			sendAckByte(connection, respAddr, MEDIUM_CHECK_MARK)
 			continue
 		}
 		packet, err := PacketFromBytes(gramMap[responseAddressString])
@@ -112,7 +113,7 @@ func Listen(port string, out_chan chan Packet, key rsa.PrivateKey, groupDetails 
 			continue
 		}
 		out_chan <- packet
-		sendAckByte(connection, respAddr)
+		sendAckByte(connection, respAddr, CHECK_MARK)
 	}
 }
 

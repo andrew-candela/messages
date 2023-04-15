@@ -13,7 +13,7 @@ func TestEncode(t *testing.T) {
 		AESKey:     []byte("this is a secret key"),
 	}
 	pack_bytes := pack.ToBytes()
-	new_packet := PacketFromBytes(pack_bytes)
+	new_packet, _ := PacketFromBytes(pack_bytes)
 	if string(new_packet.Signature) != string(pack.Signature) {
 		t.Errorf("Oops!")
 	}
