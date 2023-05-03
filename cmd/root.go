@@ -1,12 +1,19 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	group string
+	user, mode, group, listen_port string
+)
+
+const (
+	UDP_MODE  = "udp"
+	HTTP_MODE = "http"
 )
 
 var rootCmd = &cobra.Command{
@@ -21,6 +28,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVarP(&group, "group", "g", "", "Group Name to listen or write to")
+	rootCmd.PersistentFlags().StringVarP(&user, "user", "u", os.Getenv("USER"), "Your display name in messages")
 }
 
 func initConfig() {

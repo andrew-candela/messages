@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
@@ -11,11 +10,11 @@ import (
 )
 
 func produce(keyFile string, group_name string, recip_config messages.Config) {
-	var host string
-	var user string
-	flag.StringVar(&host, "host", "10.0.0.186:1053", "Provide the HOST:PORT to write to")
-	flag.StringVar(&user, "user", os.Getenv("USER"), "What do you call yourself?")
-	flag.Parse()
+
+	if mode == HTTP_MODE {
+		fmt.Println("HTTP mode is not supported yet")
+		return
+	}
 	fmt.Println(recip_config)
 	targets := messages.MakeTargets(recip_config)
 	key, err := messages.ReadExistingKey(keyFile)
@@ -27,7 +26,6 @@ func produce(keyFile string, group_name string, recip_config messages.Config) {
 }
 
 func init() {
-	produceCommand.Flags().StringVarP(&group, "group", "g", "", "Group Name to write to")
 	rootCmd.AddCommand(produceCommand)
 }
 

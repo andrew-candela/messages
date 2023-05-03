@@ -12,7 +12,7 @@ const (
 	// udpBuffer is 1024 bytes.
 	// Marshalling as Protobuf adds 5 bytes.
 	// We'll use 1000 bytes here to give some leeway
-	DATAGRAM_SIZE = 1019
+	DATAGRAM_SIZE = 1000
 )
 
 type DataGram struct {

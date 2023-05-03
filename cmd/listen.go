@@ -11,10 +11,12 @@ import (
 
 const PORT = "1053"
 
-var port string
-
 func listen(keyFile string, groupName string, recipConfig messages.Config, port string) {
 
+	if mode == HTTP_MODE {
+		fmt.Println("HTTP mode is not supported yet")
+		return
+	}
 	key, err := messages.ReadExistingKey(keyFile)
 	if err != nil {
 		fmt.Println("Could not read keyfile:", err)
@@ -27,7 +29,6 @@ func listen(keyFile string, groupName string, recipConfig messages.Config, port 
 }
 
 func init() {
-	listenCommand.Flags().StringVarP(&port, "port", "p", PORT, "Port number to listen on")
 	rootCmd.AddCommand(listenCommand)
 }
 
@@ -42,6 +43,6 @@ var listenCommand = &cobra.Command{
 			fmt.Print("error:", err)
 			os.Exit(1)
 		}
-		listen(keyFile, group, recipConfig, port)
+		listen(keyFile, group, recipConfig, listen_port)
 	},
 }

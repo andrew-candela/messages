@@ -18,7 +18,8 @@ I'd have to come up with a different name if I use TCP.
 In order to receive remote connections, you probably have to set up
 port forwarding on your local network.
 This may not be possible depending on your location.
-I may implement a workaround.
+
+The workaround here is to host your own chat server.
 
 ## Encryption
 
@@ -36,16 +37,28 @@ You must either create a new private key using this library,
 or otherwise generate an RSA key on your own.
 This package uses [crypto/rsa.GenerateKey](https://pkg.go.dev/crypto/rsa#GenerateKey)
 to generate a private key and write it to your UDPM_HOME dir,
-(~/.udpm/udpm_id_rsa) by default.
+(~/.udpm/udpm_id_rsa by default).
 
 ### Signatures
 
 Messages are signed by the senders and verified by the listener upon receipt.
-The sender will not receive a success response if any of the following occurs:
+The sender will not receive a success response if any of the following occur:
 
 - the host associated with the message sender does not match the expected host
 - the message cannot be decrypted
 - the message is not signed as expected
+
+## Webserver
+
+There is an option to host a webserver, so that you can chat with people who
+cannot set up port forwarding on their networks.
+Currently the config file of the webmaster (the user hosting the webserver)
+must have the correct IP address and public RSA key of each user in the group.
+With this config the webserver will be able to:
+
+- tell clients what their own (public, if connecting over the internet) IP address is (`/ip`)
+- give clients the config for all the users in a group (`/config`)
+- authenticate all requests with the public key assigned to the client's IP.
 
 ## Protobuf
 
@@ -59,10 +72,11 @@ This package uses PB to encode your message before it's sent over to the recipie
 
 ## ToDo
 
-- Clean up command line interface. The default config file needs to be updated.
-I'll use 
-I'll have a manual mode and and then a mode that grabs address/username/public key data from a service
-- make directory where stuff is written and config lives configurable
+- set up the websocket mechanism.
+  Looks like I'll have to maintain a map of subscribers along with the config.
+  - messages will be sent to all subscribers who are also in config
+  - the server will have to tell the clients which messages were delivered
+- the clients will have to be able to send correct headers (with a signed token)
 
 ## Reference
 
