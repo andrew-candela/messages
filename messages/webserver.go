@@ -68,7 +68,10 @@ func newMessageServer(config map[string]DeliverConfig) *MessageServer {
 		config:      config,
 	}
 	ms.serveMux.HandleFunc("/config", ms.authenticateRequest(ms.handleConfig))
-	ms.serveMux.HandleFunc("/ip", ms.authenticateRequest(ms.handleIP))
+	// Dont need to authenticate this endpoint.
+	// It's cheap to compute and if it is behind my auth system, you
+	// can't use it if you don't already know your IP.
+	ms.serveMux.HandleFunc("/ip", ms.handleIP)
 	ms.serveMux.HandleFunc("/publish", ms.authenticateRequest(ms.handlePublish))
 	return ms
 }
@@ -132,7 +135,6 @@ func (s *MessageServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func StartServer(address string, users map[string]DeliverConfig) error {
-	fmt.Println("Trying to start server")
 	l, err := net.Listen("tcp", address)
 	if err != nil {
 		fmt.Println(err)

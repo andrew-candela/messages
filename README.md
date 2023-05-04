@@ -58,7 +58,38 @@ With this config the webserver will be able to:
 
 - tell clients what their own (public, if connecting over the internet) IP address is (`/ip`)
 - give clients the config for all the users in a group (`/config`)
+- subscribe a client to all messages that come through the server (`/subscribe`)
 - authenticate all requests with the public key assigned to the client's IP.
+
+### Webserver chat mode
+
+I'm going to do pretty much the same thing as the nhoor/websocket chat example.
+The only real difference is that I'm going to encrypt the messages with each public key before sending.
+The server already has a map, keyed on IP address with the public key of each user.
+When a user subscribes to the group, it will start a websocket connection with that client.
+
+How does the server handle different connections?
+Every request is handled in a separate goroutine (I think).
+When subscription requests come in, a goroutine handles it by:
+
+- creating a websocket connection and channel for this subscriber
+- modifying the global subscription list with the new subscriber
+- looping forever listening to the channel and publishing when it gets a message
+- killing itself when the connection drops
+
+Then when a message is published, the user will have to specify which recipient it
+is intended for. This way the server doesn't have to decode the message.
+So the server won't loop through the subscriber list when sending messages.
+The client will have to send the server a new message for each intended recipient.
+
+Otherwise this will look just like the websocket example.
+Messages will be passed through from publisher to subscriber unmolested.
+The webserver only needs to know about encryption to authenticate the subscription and
+publish requests.
+
+The real work here is going to be for me to understand the blocking/looping mechanisms
+and the contexts that the websocket example uses.
+
 
 ## Protobuf
 

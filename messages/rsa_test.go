@@ -41,7 +41,7 @@ func TestRSAWriteRead(t *testing.T) {
 
 func TestBytesToString(t *testing.T) {
 	sig := []byte{1, 4, 6, 8}
-	expected := "[1,4,6,8]"
+	expected := "01040608"
 	got := BytesToString(sig)
 	if expected != got {
 		t.Errorf("%v != %v", expected, got)
@@ -49,7 +49,7 @@ func TestBytesToString(t *testing.T) {
 }
 
 func TestStringToBytes(t *testing.T) {
-	sig_str := "[1,4,6,8]"
+	sig_str := "01040608"
 	expected := []byte{1, 4, 6, 8}
 	got, err := StringToBytes(sig_str)
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/json"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"os"
@@ -16,33 +16,14 @@ import (
 
 const LABEL = "myCoolMessagingApp"
 
-// Convert a byte slice to a string by converting it to a slice of
-// ints and serializing that to a JSON string.
+// Convert a byte slice to a hex string
 func BytesToString(sig []byte) string {
-	var sig_int []int
-	for _, byte_val := range sig {
-		sig_int = append(sig_int, int(byte_val))
-	}
-	sig_str, err := json.Marshal(sig_int)
-	if err != nil {
-		panic(err)
-	}
-	return string(sig_str)
+	return hex.EncodeToString(sig)
 }
 
 // Take a JSON string (an array of ints) and build a []byte
 func StringToBytes(sig_str string) ([]byte, error) {
-	var sig_byte []byte
-	var data []byte
-	err := json.Unmarshal([]byte(sig_str), &data)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-	for _, byte_int := range data {
-		sig_byte = append(sig_byte, byte(byte_int))
-	}
-	return sig_byte, nil
+	return hex.DecodeString(sig_str)
 }
 
 func RSAEncrypt(publicKey *rsa.PublicKey, message []byte) ([]byte, error) {
