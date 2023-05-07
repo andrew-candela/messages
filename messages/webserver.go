@@ -1,9 +1,10 @@
 package messages
 
 import (
-	"bufio"
 	"context"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"time"
 
 	"nhooyr.io/websocket"
-	"nhooyr.io/websocket/wsjson"
 )
 
 const (
@@ -22,37 +22,11 @@ const (
 	SIG_HEADER         = "RSA_SIG"
 )
 
-// Sets up a websocket connection to the server and
-// writes a message
-func ExampleClient(webserverAddress string) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	c, _, err := websocket.Dial(ctx, "ws://"+webserverAddress, &websocket.DialOptions{
-		Subprotocols: []string{WEBSOCKET_PROTOCOL},
-	})
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer c.Close(websocket.StatusInternalError, "There was an error")
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		message_bytes := scanner.Bytes()
-		err = wsjson.Write(ctx, c, string(message_bytes))
-		if err != nil {
-			log.Panicln(err)
-			return
-		}
-
-	}
-	c.Close(websocket.StatusNormalClosure, "Bye")
-}
-
 type MessageServer struct {
 	logf          func(f string, v ...interface{})
 	serveMux      http.ServeMux
 	subscribersMu sync.Mutex
-	subscribers   map[*subscriber]struct{}
+	subscribers   map[string]*subscriber
 	config        map[string]DeliverConfig
 }
 
@@ -64,7 +38,7 @@ type subscriber struct {
 func newMessageServer(config map[string]DeliverConfig) *MessageServer {
 	ms := &MessageServer{
 		logf:        log.Printf,
-		subscribers: make(map[*subscriber]struct{}),
+		subscribers: make(map[string]*subscriber),
 		config:      config,
 	}
 	ms.serveMux.HandleFunc("/config", ms.authenticateRequest(ms.handleConfig))
@@ -127,11 +101,95 @@ func (s *MessageServer) handlePublish(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
+	body := http.MaxBytesReader(w, r.Body, 8192)
+	msg, err := ioutil.ReadAll(body)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusRequestEntityTooLarge), http.StatusRequestEntityTooLarge)
+		return
+	}
+	s.publish(msg)
+	w.WriteHeader(http.StatusAccepted)
+}
 
+func (s *MessageServer) handleSubscribe(w http.ResponseWriter, r *http.Request) {
+	c, err := websocket.Accept(w, r, nil)
+	if err != nil {
+		s.logf("%v", err)
+		return
+	}
+	defer c.Close(websocket.StatusInternalError, "Internal Error")
+	err = s.subscribe(r.Context(), c, StripPort(r.RemoteAddr))
+	if errors.Is(err, context.Canceled) {
+		return
+	}
+	if websocket.CloseStatus(err) == websocket.StatusNormalClosure ||
+		websocket.CloseStatus(err) == websocket.StatusGoingAway {
+		return
+	}
+	if err != nil {
+		s.logf("%v", err)
+		return
+	}
 }
 
 func (s *MessageServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.serveMux.ServeHTTP(w, r)
+}
+
+// Creates a subscriber and registers the websocket connection to it
+// Returns any error encountered, otherwise loops forever until the connection is
+// closed.
+func (s *MessageServer) subscribe(ctx context.Context, c *websocket.Conn, ip string) error {
+	// We will write to this websocket connection and never read from it.
+	// We use CloseRead so that we can pass the cancellable context on to the
+	// write loop below.
+	new_context := c.CloseRead(ctx)
+	new_sub := &subscriber{
+		msgs: make(chan []byte, 2),
+		closeSlow: func() {
+			c.Close(websocket.StatusPolicyViolation, "Connection too slow to keep up")
+		},
+	}
+	s.addSubscriber(ip, new_sub)
+	defer s.deleteSubscriber(ip)
+	for {
+		select {
+		case msg := <-new_sub.msgs:
+			err := writeTimeout(new_context, time.Second*5, c, msg)
+			if err != nil {
+				return err
+			}
+		case <-new_context.Done():
+			return new_context.Err()
+		}
+	}
+}
+
+// Adds the given subscriber to the subscribers map.
+// Must lock the mutex when editing the global map.
+func (s *MessageServer) addSubscriber(ip string, sub *subscriber) {
+	s.subscribersMu.Lock()
+	defer s.subscribersMu.Unlock()
+	s.subscribers[ip] = sub
+
+}
+
+// Removes a subscriber from the map
+func (s *MessageServer) deleteSubscriber(ip string) {
+	s.subscribersMu.Lock()
+	defer s.subscribersMu.Unlock()
+	delete(s.subscribers, ip)
+}
+
+// Parses the msg body and publishes the message to the intended websocket
+func (s *MessageServer) publish(msg []byte) {
+
+}
+
+func writeTimeout(ctx context.Context, timeout time.Duration, c *websocket.Conn, msg []byte) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	return c.Write(ctx, websocket.MessageBinary, msg)
 }
 
 func StartServer(address string, users map[string]DeliverConfig) error {
@@ -140,7 +198,7 @@ func StartServer(address string, users map[string]DeliverConfig) error {
 		fmt.Println(err)
 		return err
 	}
-	log.Printf("listening on http://%v\n", l.Addr())
+	log.Printf("listening on %v\n", l.Addr())
 	ms := newMessageServer(users)
 	s := &http.Server{
 		Handler:      ms,

@@ -31,6 +31,6 @@ var startWebserverCommand = &cobra.Command{
 }
 
 func init() {
-	startWebserverCommand.Flags().StringVarP(&webservice_address, "address", "a", "localhost:8080", "The address that the webserver or messanger will listen on. Defaults to 'localhost:8080'.")
+	startWebserverCommand.Flags().StringVarP(&webservice_address, "address", "a", ":80", "The address that the webserver or messanger will listen on. Defaults to ':80'")
 	rootCmd.AddCommand(startWebserverCommand)
 }

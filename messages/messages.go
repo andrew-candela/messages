@@ -122,3 +122,39 @@ func SplitMessageIntoDatagrams(encodedPacket []byte) [][]byte {
 	}
 	return gramList
 }
+
+type WebserverMessage struct {
+	IPTarget string
+	DataGram *DataGram
+}
+
+func (wsm *WebserverMessage) ToBytes() ([]byte, int) {
+	pbm := &ProtoWebserverMessage{
+		IPTarget: wsm.IPTarget,
+		DataGram: &ProtoGram{
+			ExpectMoreMessages: wsm.DataGram.ExpectMoreMessages,
+			Content:            wsm.DataGram.Content,
+		},
+	}
+	data, err := proto.Marshal(pbm)
+	if err != nil {
+		panic(err)
+	}
+	return data, len(data)
+}
+
+func WebserverMessageFromBytes(data []byte) (WebserverMessage, error) {
+	newWSM := &ProtoWebserverMessage{}
+	err := proto.Unmarshal(data, newWSM)
+	if err != nil {
+		return WebserverMessage{}, fmt.Errorf("could not unmarshal raw bytes into WebserverMessage...%w", err)
+	}
+
+	return WebserverMessage{
+		IPTarget: newWSM.IPTarget,
+		DataGram: &DataGram{
+			ExpectMoreMessages: newWSM.DataGram.ExpectMoreMessages,
+			Content:            newWSM.DataGram.Content,
+		},
+	}, nil
+}

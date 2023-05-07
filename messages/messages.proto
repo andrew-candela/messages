@@ -16,3 +16,8 @@ message ProtoGram {
     bool ExpectMoreMessages = 1;
     bytes Content = 2;
 }
+
+message ProtoWebserverMessage {
+    string IPTarget = 1;
+    ProtoGram DataGram = 2;
+}
