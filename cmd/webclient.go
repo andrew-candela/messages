@@ -17,7 +17,8 @@ func getMyIP(keyFile string, host string) {
 		fmt.Println("Could not read private key file:", keyFile)
 		os.Exit(1)
 	}
-	my_ip := messages.GetMyIp(host, key)
+	client := messages.MakeClient()
+	my_ip := messages.GetMyIp(host, key, client)
 	fmt.Println(my_ip)
 }
 
@@ -36,11 +37,33 @@ func getConfig(keyFile string, host string) {
 		fmt.Println("Could not read private key file:", keyFile)
 		os.Exit(1)
 	}
-	config := messages.GetConfig(host, key)
+	client := messages.MakeClient()
+	config := messages.GetConfig(host, key, client)
 	fmt.Println(config)
 }
 
 var webClientConfigCommand = &cobra.Command{
+	Use: "get-config",
+	Run: func(cmd *cobra.Command, args []string) {
+		viper.ReadInConfig()
+		keyFile := viper.GetString("private_key_file")
+		getConfig(keyFile, webserver_host)
+	},
+}
+
+func publish(keyFile string, host string) {
+	key, err := messages.ReadExistingKey(keyFile)
+	if err != nil {
+		fmt.Println("Could not read private key file:", keyFile)
+		os.Exit(1)
+	}
+	client := messages.MakeClient()
+
+	config := messages.Publish(host, key, client)
+	fmt.Println(config)
+}
+
+var webClientSubscribeCommand = &cobra.Command{
 	Use: "get-config",
 	Run: func(cmd *cobra.Command, args []string) {
 		viper.ReadInConfig()

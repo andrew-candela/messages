@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -20,6 +20,7 @@ const (
 	WEBSOCKET_PROTOCOL = "UDPMWS"
 	SIG_TOKEN_HEADER   = "RSA_SIG_TOKEN"
 	SIG_HEADER         = "RSA_SIG"
+	IP_TARGET_HEADER   = "IP_TARGET"
 )
 
 type MessageServer struct {
@@ -47,6 +48,7 @@ func newMessageServer(config map[string]DeliverConfig) *MessageServer {
 	// can't use it if you don't already know your IP.
 	ms.serveMux.HandleFunc("/ip", ms.handleIP)
 	ms.serveMux.HandleFunc("/publish", ms.authenticateRequest(ms.handlePublish))
+	ms.serveMux.HandleFunc("/subscribe", ms.authenticateRequest(ms.handleSubscribe))
 	return ms
 }
 
@@ -101,13 +103,22 @@ func (s *MessageServer) handlePublish(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
-	body := http.MaxBytesReader(w, r.Body, 8192)
-	msg, err := ioutil.ReadAll(body)
+	ip_target := r.Header.Get(IP_TARGET_HEADER)
+	if ip_target == "" {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	body := http.MaxBytesReader(w, r.Body, 1024)
+	msg, err := io.ReadAll(body)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusRequestEntityTooLarge), http.StatusRequestEntityTooLarge)
 		return
 	}
-	s.publish(msg)
+	err = s.publish(msg, StripPort(ip_target))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("%v", err), http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -181,9 +192,16 @@ func (s *MessageServer) deleteSubscriber(ip string) {
 	delete(s.subscribers, ip)
 }
 
-// Parses the msg body and publishes the message to the intended websocket
-func (s *MessageServer) publish(msg []byte) {
-
+// Parses the msg body and passes the message to the proper channel
+func (s *MessageServer) publish(msg []byte, ip_target string) error {
+	s.subscribersMu.Lock()
+	defer s.subscribersMu.Unlock()
+	sub, ok := s.subscribers[ip_target]
+	if !ok {
+		return errors.New(fmt.Sprintf("%v is not in the map of subscribers", ip_target))
+	}
+	sub.msgs <- msg
+	return nil
 }
 
 func writeTimeout(ctx context.Context, timeout time.Duration, c *websocket.Conn, msg []byte) error {

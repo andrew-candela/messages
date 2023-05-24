@@ -107,10 +107,17 @@ This package uses PB to encode your message before it's sent over to the recipie
   Looks like I'll have to maintain a map of subscribers along with the config.
   - messages will be sent to all subscribers who are also in config
   - the server will have to tell the clients which messages were delivered
-- the clients will have to be able to send correct headers (with a signed token)
+
+### Refactor the UDP transport
+
+I need to rewrite the mechanism that sends messages.
+I have coupled the way the messages are packaged to the delivery mechanism.
+I want the UI to collect messages and package them into datagrams the same way,
+and then I can choose how to deliver them.
 
 ## Reference
 
 - [cobra](https://github.com/spf13/cobra/) for CLI arguments
 - [viper](https://github.com/spf13/viper) for config.
 - [X.509 standard](https://en.wikipedia.org/wiki/X.509) defines the format of public key certificates
+
